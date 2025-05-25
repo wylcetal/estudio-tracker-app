@@ -1,0 +1,264 @@
+/* Estilos generales - Tema Oscuro */
+body {
+    background-color: #121212;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.container {
+    max-width: 1200px;
+}
+
+.card {
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    border: none;
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+}
+
+.card-header {
+    padding: 15px 20px;
+    background-color: #2d2d2d;
+    color: #ffffff;
+}
+
+.shadow {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Estilos del calendario */
+#calendario {
+    height: 600px;
+}
+
+.fc-daygrid-day {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.fc-daygrid-day:hover {
+    background-color: #2a2a2a;
+}
+
+.fc-event {
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-size: 0.8em;
+}
+
+/* Colores para los niveles de importancia */
+.importancia-alta {
+    background-color: #ff4d5e !important;
+    border-color: #ff4d5e !important;
+    color: #ffffff !important;
+}
+
+.importancia-media {
+    background-color: #ffb700 !important;
+    border-color: #ffb700 !important;
+    color: #212529 !important;
+}
+
+.importancia-baja {
+    background-color: #3a86ff !important;
+    border-color: #3a86ff !important;
+    color: #ffffff !important;
+}
+
+/* Estilos para la lista de tareas */
+.tarea-item {
+    border-left: 4px solid #0d6efd;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+}
+
+.tarea-item:hover {
+    transform: translateX(5px);
+}
+
+.tarea-item.importancia-alta {
+    border-left-color: #dc3545;
+}
+
+.tarea-item.importancia-media {
+    border-left-color: #ffc107;
+}
+
+.tarea-item.importancia-baja {
+    border-left-color: #0d6efd;
+}
+
+.tarea-acciones {
+    display: flex;
+    gap: 5px;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #calendario {
+        height: 400px;
+    }
+    
+    .row {
+        flex-direction: column-reverse;
+    }
+}
+
+/* Estilos para tooltips */
+.tooltip {
+    opacity: 1 !important;
+}
+
+.tooltip .tooltip-inner {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    border: 1px solid #444;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    padding: 12px;
+    max-width: 300px;
+    text-align: left;
+    font-family: 'Poppins', sans-serif;
+}
+
+.tooltip .tooltip-arrow::before {
+    border-top-color: #444;
+}
+
+.tooltip-content p {
+    margin-bottom: 6px;
+}
+
+.tooltip-content p:last-child {
+    margin-bottom: 0;
+}
+
+/* Estilos para eventos del calendario */
+.fc-event {
+    padding: 6px 8px;
+    border-radius: 6px;
+    margin-bottom: 2px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.fc-event:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+}
+
+/* Estilos adicionales para tema oscuro */
+.form-control, .form-select {
+    background-color: #333;
+    border-color: #444;
+    color: #e0e0e0;
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: #3a3a3a;
+    color: #ffffff;
+    border-color: #666;
+    box-shadow: 0 0 0 0.25rem rgba(58, 134, 255, 0.25);
+}
+
+.btn-primary {
+    background-color: #3a86ff;
+    border-color: #3a86ff;
+}
+
+.btn-primary:hover {
+    background-color: #2a76ef;
+    border-color: #2a76ef;
+}
+
+.btn-secondary {
+    background-color: #555;
+    border-color: #555;
+}
+
+.btn-secondary:hover {
+    background-color: #666;
+    border-color: #666;
+}
+
+.btn-outline-primary {
+    color: #3a86ff;
+    border-color: #3a86ff;
+}
+
+.btn-outline-primary:hover {
+    background-color: #3a86ff;
+    color: #fff;
+}
+
+.btn-outline-danger {
+    color: #ff4d5e;
+    border-color: #ff4d5e;
+}
+
+.btn-outline-danger:hover {
+    background-color: #ff4d5e;
+    color: #fff;
+}
+
+.fc {
+    color: #e0e0e0;
+}
+
+.fc-theme-standard td, .fc-theme-standard th {
+    border-color: #444;
+}
+
+.fc-theme-standard .fc-scrollgrid {
+    border-color: #444;
+}
+
+.fc-col-header-cell {
+    background-color: #2d2d2d;
+}
+
+.fc-daygrid-day-number {
+    color: #e0e0e0;
+}
+
+.fc-button-primary {
+    background-color: #3a3a3a !important;
+    border-color: #555 !important;
+}
+
+.fc-button-primary:hover {
+    background-color: #444 !important;
+    border-color: #666 !important;
+}
+
+.fc-button-primary:not(:disabled).fc-button-active, 
+.fc-button-primary:not(:disabled):active {
+    background-color: #3a86ff !important;
+    border-color: #3a86ff !important;
+}
+
+.modal-content {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+}
+
+.modal-header {
+    border-bottom-color: #444;
+}
+
+.modal-footer {
+    border-top-color: #444;
+}
