@@ -16,7 +16,7 @@ Esta aplicación web te permite llevar un registro detallado de tus actividades 
 
 ## Requisitos
 
-- Python 3.7 o superior
+- Python 3.14 o superior
 - Pip (gestor de paquetes de Python)
 
 ## Instalación
@@ -28,13 +28,31 @@ Esta aplicación web te permite llevar un registro detallado de tus actividades 
 pip install -r requirements.txt
 ```
 
-3. Ejecuta la aplicación:
+3. Opcionalmente define variables de entorno:
+
+```bash
+export SECRET_KEY="cambia-esto-en-produccion"
+export DATABASE_URL="sqlite:///instance/estudio_tracker.db"
+```
+
+4. Ejecuta la aplicación:
 
 ```bash
 python app.py
 ```
 
-4. Abre tu navegador y visita: `http://localhost:5000`
+5. Abre tu navegador y visita: `http://localhost:5000`
+
+## Despliegue
+
+El proyecto incluye configuración para Render/Heroku-style:
+
+- `Procfile` ejecuta `gunicorn app:app`
+- `.python-version` fija Python 3.14 para tooling moderno
+- `runtime.txt` mantiene compatibilidad con plataformas que todavía lo leen
+- `render.yaml` define el servicio web y usa `requirements.txt`
+
+En producción define `SECRET_KEY` y, si no usas SQLite local, `DATABASE_URL`.
 
 ## Uso
 

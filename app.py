@@ -1,17 +1,27 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, send_file, Response
+from flask import Flask, render_template, request, jsonify, Response
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
 import csv
 import io
 from collections import defaultdict
-import tempfile
+from pathlib import Path
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'tu_clave_secreta'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///estudio_tracker.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-me')
+database_url = os.environ.get('DATABASE_URL')
+if database_url and database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
+if not database_url:
+    Path(app.instance_path).mkdir(parents=True, exist_ok=True)
+    database_url = f"sqlite:///{Path(app.instance_path) / 'estudio_tracker.db'}"
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+IMPORTANCIAS_VALIDAS = {'Alta', 'Media', 'Baja'}
 
 # Modelo de datos para las tareas de estudio
 class Tarea(db.Model):
@@ -31,6 +41,46 @@ class Tarea(db.Model):
             'proyecto': self.proyecto,
             'importancia': self.importancia
         }
+
+
+def validar_tarea_payload(data):
+    if not isinstance(data, dict):
+        return None, ('El cuerpo de la solicitud debe ser JSON.', 400)
+
+    campos = ('fecha', 'tema', 'horas', 'proyecto', 'importancia')
+    faltantes = [campo for campo in campos if campo not in data or data[campo] in (None, '')]
+    if faltantes:
+        return None, (f"Campos requeridos faltantes: {', '.join(faltantes)}.", 400)
+
+    try:
+        fecha = datetime.strptime(str(data['fecha']), '%Y-%m-%d').date()
+    except ValueError:
+        return None, ('La fecha debe tener formato YYYY-MM-DD.', 400)
+
+    try:
+        horas = float(data['horas'])
+    except (TypeError, ValueError):
+        return None, ('Las horas deben ser un número.', 400)
+
+    if horas <= 0:
+        return None, ('Las horas deben ser mayores que cero.', 400)
+
+    importancia = str(data['importancia']).strip()
+    if importancia not in IMPORTANCIAS_VALIDAS:
+        return None, ('La importancia debe ser Alta, Media o Baja.', 400)
+
+    payload = {
+        'fecha': fecha,
+        'tema': str(data['tema']).strip(),
+        'horas': horas,
+        'proyecto': str(data['proyecto']).strip(),
+        'importancia': importancia,
+    }
+
+    if not payload['tema'] or not payload['proyecto']:
+        return None, ('Tema y proyecto no pueden estar vacíos.', 400)
+
+    return payload, None
 
 # Crear la base de datos si no existe
 with app.app_context():
@@ -109,22 +159,22 @@ def exportar_csv():
 
 @app.route('/tareas', methods=['GET'])
 def obtener_tareas():
-    tareas = Tarea.query.all()
+    tareas = Tarea.query.order_by(Tarea.fecha.desc(), Tarea.id.desc()).all()
     return jsonify([tarea.to_dict() for tarea in tareas])
 
 @app.route('/tareas', methods=['POST'])
 def crear_tarea():
-    data = request.json
-    
-    # Convertir la fecha de string a objeto date
-    fecha = datetime.strptime(data['fecha'], '%Y-%m-%d').date()
+    payload, error = validar_tarea_payload(request.get_json(silent=True))
+    if error:
+        mensaje, status = error
+        return jsonify({'error': mensaje}), status
     
     nueva_tarea = Tarea(
-        fecha=fecha,
-        tema=data['tema'],
-        horas=float(data['horas']),
-        proyecto=data['proyecto'],
-        importancia=data['importancia']
+        fecha=payload['fecha'],
+        tema=payload['tema'],
+        horas=payload['horas'],
+        proyecto=payload['proyecto'],
+        importancia=payload['importancia']
     )
     
     db.session.add(nueva_tarea)
@@ -135,16 +185,16 @@ def crear_tarea():
 @app.route('/tareas/<int:tarea_id>', methods=['PUT'])
 def actualizar_tarea(tarea_id):
     tarea = Tarea.query.get_or_404(tarea_id)
-    data = request.json
+    payload, error = validar_tarea_payload(request.get_json(silent=True))
+    if error:
+        mensaje, status = error
+        return jsonify({'error': mensaje}), status
     
-    # Convertir la fecha de string a objeto date
-    fecha = datetime.strptime(data['fecha'], '%Y-%m-%d').date()
-    
-    tarea.fecha = fecha
-    tarea.tema = data['tema']
-    tarea.horas = float(data['horas'])
-    tarea.proyecto = data['proyecto']
-    tarea.importancia = data['importancia']
+    tarea.fecha = payload['fecha']
+    tarea.tema = payload['tema']
+    tarea.horas = payload['horas']
+    tarea.proyecto = payload['proyecto']
+    tarea.importancia = payload['importancia']
     
     db.session.commit()
     
@@ -157,6 +207,11 @@ def eliminar_tarea(tarea_id):
     db.session.commit()
     
     return '', 204
+
+
+@app.errorhandler(404)
+def no_encontrado(error):
+    return jsonify({'error': 'Recurso no encontrado.'}), 404
 
 if __name__ == '__main__':
     # Configuración para desarrollo local

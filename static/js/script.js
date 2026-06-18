@@ -4,6 +4,26 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedDate = null;
     let tareaSeleccionada = null;
     let todasLasTareas = [];
+
+    function escapeHTML(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function manejarRespuesta(response) {
+        if (!response.ok) {
+            return response.json()
+                .catch(() => ({}))
+                .then(data => {
+                    throw new Error(data.error || 'No se pudo completar la operación.');
+                });
+        }
+        return response.status === 204 ? null : response.json();
+    }
     
     // Inicializar el calendario
     const calendarEl = document.getElementById('calendario');
@@ -23,10 +43,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // Crear tooltip con Bootstrap
             const tooltip = new bootstrap.Tooltip(info.el, {
                 title: `<div class="tooltip-content">
-                            <p><strong>${info.event.title}</strong></p>
-                            <p><i class="bi bi-folder me-1"></i>Proyecto: ${info.event.extendedProps.proyecto}</p>
-                            <p><i class="bi bi-clock me-1"></i>Horas: ${info.event.extendedProps.horas}h</p>
-                            <p><i class="bi bi-star me-1"></i>Importancia: ${info.event.extendedProps.importancia}</p>
+                            <p><strong>${escapeHTML(info.event.title)}</strong></p>
+                            <p><i class="bi bi-folder me-1"></i>Proyecto: ${escapeHTML(info.event.extendedProps.proyecto)}</p>
+                            <p><i class="bi bi-clock me-1"></i>Horas: ${escapeHTML(info.event.extendedProps.horas)}h</p>
+                            <p><i class="bi bi-star me-1"></i>Importancia: ${escapeHTML(info.event.extendedProps.importancia)}</p>
                          </div>`,
                 placement: 'top',
                 trigger: 'hover',
@@ -72,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             return {
-                html: `<div class="fc-event-title">${importanciaIcon}${arg.event.title}</div>`
+                html: `<div class="fc-event-title">${importanciaIcon}${escapeHTML(arg.event.title)}</div>`
             };
         }
     });
@@ -90,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Funciones
     function cargarTareas() {
         fetch('/tareas')
-            .then(response => response.json())
+            .then(manejarRespuesta)
             .then(data => {
                 todasLasTareas = data;
                 actualizarCalendario();
@@ -134,19 +154,22 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Crear elementos para cada tarea
             tareasDia.forEach(tarea => {
+                const importancia = tarea.importancia.toLowerCase();
+                const badgeClass = importancia === 'alta' ? 'danger' : (importancia === 'media' ? 'warning' : 'primary');
+                const badgeIcon = importancia === 'alta' ? '<i class="bi bi-exclamation-circle me-1"></i>' : (importancia === 'media' ? '<i class="bi bi-star me-1"></i>' : '<i class="bi bi-check-circle me-1"></i>');
                 const tareaElement = document.createElement('div');
-                tareaElement.className = `list-group-item tarea-item importancia-${tarea.importancia.toLowerCase()} fade-in`;
+                tareaElement.className = `list-group-item tarea-item importancia-${importancia} fade-in`;
                 tareaElement.innerHTML = `
                     <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">${tarea.tema}</h5>
-                        <small><i class="bi bi-clock me-1"></i>${tarea.horas}h</small>
+                        <h5 class="mb-1">${escapeHTML(tarea.tema)}</h5>
+                        <small><i class="bi bi-clock me-1"></i>${escapeHTML(tarea.horas)}h</small>
                     </div>
-                    <p class="mb-1"><i class="bi bi-folder me-1"></i>Proyecto: ${tarea.proyecto}</p>
+                    <p class="mb-1"><i class="bi bi-folder me-1"></i>Proyecto: ${escapeHTML(tarea.proyecto)}</p>
                     <div class="d-flex justify-content-between align-items-center">
                         <small>
-                            <span class="badge bg-${tarea.importancia.toLowerCase() === 'alta' ? 'danger' : (tarea.importancia.toLowerCase() === 'media' ? 'warning' : 'primary')}">
-                                ${tarea.importancia.toLowerCase() === 'alta' ? '<i class="bi bi-exclamation-circle me-1"></i>' : (tarea.importancia.toLowerCase() === 'media' ? '<i class="bi bi-star me-1"></i>' : '<i class="bi bi-check-circle me-1"></i>')}
-                                ${tarea.importancia}
+                            <span class="badge bg-${badgeClass}">
+                                ${badgeIcon}
+                                ${escapeHTML(tarea.importancia)}
                             </span>
                         </small>
                         <div class="tarea-acciones">
@@ -199,7 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify(tareaData)
             })
-            .then(response => response.json())
+            .then(manejarRespuesta)
             .then(data => {
                 // Actualizar la lista de tareas
                 const index = todasLasTareas.findIndex(t => t.id === parseInt(tareaId));
@@ -211,7 +234,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 actualizarCalendario();
                 mostrarTareasDia(tareaData.fecha);
             })
-            .catch(error => console.error('Error al actualizar la tarea:', error));
+            .catch(error => alert(error.message));
         } else {
             // Crear nueva tarea
             fetch('/tareas', {
@@ -221,7 +244,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify(tareaData)
             })
-            .then(response => response.json())
+            .then(manejarRespuesta)
             .then(data => {
                 // Agregar la nueva tarea a la lista
                 todasLasTareas.push(data);
@@ -230,7 +253,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 actualizarCalendario();
                 mostrarTareasDia(tareaData.fecha);
             })
-            .catch(error => console.error('Error al crear la tarea:', error));
+            .catch(error => alert(error.message));
         }
     }
     
@@ -293,26 +316,25 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`/tareas/${tareaSeleccionada.id}`, {
             method: 'DELETE'
         })
-        .then(response => {
-            if (response.ok) {
-                // Eliminar la tarea de la lista
-                const index = todasLasTareas.findIndex(t => t.id === tareaSeleccionada.id);
-                if (index !== -1) {
-                    todasLasTareas.splice(index, 1);
-                }
-                
-                // Actualizar la vista
-                actualizarCalendario();
-                if (selectedDate) {
-                    mostrarTareasDia(selectedDate);
-                }
-                
-                // Cerrar el modal
-                const eliminarModal = bootstrap.Modal.getInstance(document.getElementById('eliminar-modal'));
-                eliminarModal.hide();
+        .then(manejarRespuesta)
+        .then(() => {
+            // Eliminar la tarea de la lista
+            const index = todasLasTareas.findIndex(t => t.id === tareaSeleccionada.id);
+            if (index !== -1) {
+                todasLasTareas.splice(index, 1);
             }
+
+            // Actualizar la vista
+            actualizarCalendario();
+            if (selectedDate) {
+                mostrarTareasDia(selectedDate);
+            }
+
+            // Cerrar el modal
+            const eliminarModal = bootstrap.Modal.getInstance(document.getElementById('eliminar-modal'));
+            eliminarModal.hide();
         })
-        .catch(error => console.error('Error al eliminar la tarea:', error));
+        .catch(error => alert(error.message));
     }
     
     function formatearFecha(fechaStr) {
