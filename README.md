@@ -17,15 +17,15 @@ Esta aplicación web te permite llevar un registro detallado de tus actividades 
 ## Requisitos
 
 - Python 3.14 o superior
-- Pip (gestor de paquetes de Python)
+- uv
 
 ## Instalación
 
 1. Clona o descarga este repositorio
-2. Instala las dependencias:
+2. Instala las dependencias con uv:
 
 ```bash
-pip install -r requirements.txt
+uv sync
 ```
 
 3. Opcionalmente define variables de entorno:
@@ -35,10 +35,10 @@ export SECRET_KEY="cambia-esto-en-produccion"
 export DATABASE_URL="sqlite:///instance/estudio_tracker.db"
 ```
 
-4. Ejecuta la aplicación:
+4. Ejecuta la aplicación en desarrollo:
 
 ```bash
-python app.py
+uv run flask --app app run --debug
 ```
 
 5. Abre tu navegador y visita: `http://localhost:5000`
@@ -47,10 +47,13 @@ python app.py
 
 El proyecto incluye configuración para Render/Heroku-style:
 
-- `Procfile` ejecuta `gunicorn app:app`
+- `pyproject.toml` define las dependencias principales
+- `uv.lock` bloquea versiones reproducibles
+- `requirements.txt` se genera desde `uv.lock` para compatibilidad
+- `Procfile` ejecuta `uv run gunicorn app:app`
 - `.python-version` fija Python 3.14 para tooling moderno
 - `runtime.txt` mantiene compatibilidad con plataformas que todavía lo leen
-- `render.yaml` define el servicio web y usa `requirements.txt`
+- `render.yaml` instala `uv`, ejecuta `uv sync --locked` y arranca con `uv run`
 
 En producción define `SECRET_KEY` y, si no usas SQLite local, `DATABASE_URL`.
 
@@ -68,7 +71,8 @@ En producción define `SECRET_KEY` y, si no usas SQLite local, `DATABASE_URL`.
 ## Tecnologías utilizadas
 
 - Backend: Flask (Python)
-- Base de datos: SQLite con SQLAlchemy
+- Base de datos: SQLite con Flask-SQLAlchemy / SQLAlchemy
+- Gestor de paquetes: uv
 - Frontend: HTML, CSS, JavaScript
 - Bibliotecas: FullCalendar.js, Bootstrap 5
 

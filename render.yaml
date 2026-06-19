@@ -2,5 +2,5 @@ services:
   - type: web
     name: estudio-tracker
     env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    buildCommand: pip install uv && uv sync --locked
+    startCommand: uv run gunicorn app:app
